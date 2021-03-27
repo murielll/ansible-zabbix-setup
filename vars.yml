@@ -3,8 +3,8 @@ zbx_db_host: 192.168.7.250
 zbx_db_hostname: zabbix-db
 zbx_db_name: zabbix
 zbx_db_user: zabbix
-zbx_proxy_db_name: zabbix-proxy
-pg_sql_allowed_ip: 192.168.0.0/16
 zbx_srv_host: 192.168.7.126
 zbx_srv_hostname: zabbix-srv
+zbx_proxy_db_name: zabbix-proxy
 zbx_web_domain: zabbix.lan
+pg_sql_allowed_ip: 192.168.0.0/16
