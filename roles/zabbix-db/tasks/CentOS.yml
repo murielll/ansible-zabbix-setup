@@ -1,0 +1,62 @@
+---
+- name: Install PostgreSQL repo
+  ansible.builtin.dnf:
+    name: 'https://download.postgresql.org/pub/repos/yum/reporpms/EL-8-x86_64/pgdg-redhat-repo-latest.noarch.rpm'
+    state: present
+
+- name: Disable AppStream PostgreSQL module
+  command: 'dnf -qy module disable postgresql' # Ansible dnf module don't have such functionality yet
+
+- name: Install PostgreSQL DB and another required packages
+  ansible.builtin.dnf:
+    name:
+      - postgresql13-server
+      - iptables
+      - python3-psycopg2
+      - sudo
+    update_cache: yes
+    state: present
+
+- name: Init PostgreSQL DB
+  command: postgresql-13-setup initdb
+  args:
+    creates: /var/lib/pgsql/13/data/postgresql.conf
+
+- name: Set listen IP of PostgreSQL DB
+  ansible.builtin.lineinfile:
+    path: /var/lib/pgsql/13/data/postgresql.conf
+    regexp: '^listen_addresses ='
+    line: listen_addresses = '{{ zbx_db_host }}, 127.0.0.1'
+    insertbefore: '^#port'
+    state: present
+    backup: yes
+
+- name: Grant user access to zabbix databases from all hosts using peer authentication
+  community.postgresql.postgresql_pg_hba:
+    dest: /var/lib/pgsql/13/data/pg_hba.conf
+    contype: host
+    source: "{{ pg_sql_allowed_ip }}"
+    users: "{{ zbx_db_user }}"
+    databases: '{{ zbx_db_name }}, {{ zbx_proxy_db_name }}'
+    method: md5
+
+- name: Enable and start PostgreSQL DB
+  ansible.builtin.service:
+    name: postgresql-13
+    state: restarted
+    enabled: yes
+
+# workaround for CentOS for Ansible locale_gen module BEGIN
+- set_fact:
+    system_settings_locale: en_US.UTF-8
+
+- name: check if locale exists en_US.UTF-8
+  shell: "locale -a | grep -i {{ system_settings_locale | regex_replace('-', '') | quote }}"
+  register: found_locale
+  changed_when: no
+  failed_when: no
+
+- name: create locale en_US.UTF-8
+  command: "localedef -i {{ system_settings_locale | regex_replace('(.*)\\..*', '\\1') | quote }} -f {{ system_settings_locale | regex_replace('.*\\.(.*)', '\\1') | quote }} {{ system_settings_locale | quote }}"
+  when: found_locale.rc != 0
+# workaround for CentOS for Ansible locale_gen module END

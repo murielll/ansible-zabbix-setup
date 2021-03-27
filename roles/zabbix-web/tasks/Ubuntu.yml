@@ -1,0 +1,24 @@
+---
+- name: Install required packages for Zabbix WEB UI
+  ansible.builtin.apt:
+    name:
+      - nginx
+      - php7.4-fpm
+      - php7.4-pgsql
+      - iptables
+    update_cache: yes
+    state: present
+
+- name: Install packages for Zabbix WEB UI
+  ansible.builtin.apt:
+    name:
+      - zabbix-frontend-php
+      - zabbix-nginx-conf
+    update_cache: yes
+    state: present
+
+- name: Restart Web UI services
+  ansible.builtin.service:
+    name: php7.4-fpm
+    state: restarted
+    enabled: yes

@@ -1,0 +1,17 @@
+---
+- name: Install packages for Zabbix WEB UI
+  ansible.builtin.dnf:
+    name:
+      - zabbix-web-pgsql
+      - zabbix-nginx-conf
+      - nginx
+      - php-fpm
+      - iptables
+    update_cache: yes
+    state: present
+
+- name: Restart Web UI services
+  ansible.builtin.service:
+    name: php-fpm
+    state: restarted
+    enabled: yes

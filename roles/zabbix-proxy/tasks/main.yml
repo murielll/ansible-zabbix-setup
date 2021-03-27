@@ -1,0 +1,44 @@
+---
+- name: Do OS specific tasks
+  include_tasks: "{{ ansible_distribution }}.yml"
+
+- name: Edit Zabbix Proxy config
+  ansible.builtin.lineinfile:
+    path: /etc/zabbix/zabbix_proxy.conf
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    state: present
+    backup: yes
+  loop:
+    - { regexp: '^Server=127.0.0.1', line: 'Server={{ zbx_srv_hostname }}' }
+    - { regexp: '^# DBHost=localhost', line: 'DBHost={{ zbx_db_hostname }}' }
+    - { regexp: '^DBName=zabbix_proxy', line: 'DBName={{ zbx_proxy_db_name }}' }
+    - { regexp: '^# DBPassword=', line: 'DBPassword={{ zbx_db_pass }}' }
+
+- name: Unzip initial DB for Zabbix Proxy
+ # ansible.builtin.unarchive - Does not handle .gz files, .bz2 files or .xz files that do not contain a .tar archive.
+  shell: gunzip -c /usr/share/doc/zabbix-proxy-pgsql/schema.sql.gz > /tmp/schema.sql
+
+- name: Import initial DB for Zabbix Proxy
+  community.postgresql.postgresql_db:
+    name: "{{ zbx_proxy_db_name }}"
+    login_host: "{{ zbx_db_host }}"
+    login_user: "{{ zbx_db_user }}"
+    login_password: "{{ zbx_db_pass }}"
+    state: restore
+    target: /tmp/schema.sql
+
+  # Without this deletion on CentOS Proxy wasn't starting and was writing in log "database upgrade failed"
+  # - name: Delete strange record in proxy db
+  #   community.postgresql.postgresql_query:
+  #     db: "{{ zbx_proxy_db_name }}"
+  #     login_host: "{{ zbx_db_host }}"
+  #     login_user: "{{ zbx_db_user }}"
+  #     login_password: "{{ zbx_db_pass }}"
+  #     query: DELETE FROM dbversion WHERE mandatory=2010009;
+
+- name: Restart Zabbix Proxy
+  ansible.builtin.service:
+    name: zabbix-proxy
+    state: restarted
+    enabled: yes

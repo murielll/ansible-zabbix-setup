@@ -1,0 +1,8 @@
+---
+- name: Install packages for Zabbix Proxy
+  ansible.builtin.dnf:
+    name:
+      - zabbix-proxy-pgsql
+      - postgresql
+    update_cache: yes
+    state: present

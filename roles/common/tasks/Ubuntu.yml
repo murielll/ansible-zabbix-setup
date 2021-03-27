@@ -1,0 +1,11 @@
+---
+- name: Install Zabbix repo
+  ansible.builtin.apt:
+    # http instead of https because zabbix site has expired cert
+    deb: http://repo.zabbix.com/zabbix/5.2/ubuntu/pool/main/z/zabbix-release/zabbix-release_5.2-1+ubuntu20.04_all.deb
+
+- name: Install zabbix agent package
+  ansible.builtin.apt:
+    name: zabbix-agent
+    update_cache: yes
+    state: present

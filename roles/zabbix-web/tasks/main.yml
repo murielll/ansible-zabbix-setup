@@ -1,0 +1,29 @@
+---
+- name: Do OS specific tasks
+  include_tasks: "{{ ansible_distribution }}.yml"
+
+- name: Edit nginx config
+  ansible.builtin.lineinfile:
+    path: "{{ item.path }}"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    backrefs: yes
+    state: present
+  loop:
+    - { path: '/etc/nginx/conf.d/zabbix.conf', regexp: '^#(\s+)listen(\s+)80;', line: '\1listen\2 80;' }
+    - { path: '/etc/nginx/conf.d/zabbix.conf', regexp: '^#(\s+)server_name(\s+)example.com;', line: '\1server_name\2 {{ zbx_web_domain }};' }
+
+- name: Allow incoming connections in firewall on HTTP default port
+  ansible.builtin.iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: '80'
+    ctstate: NEW,ESTABLISHED
+    jump: ACCEPT
+    comment: Accept HTTP connections.
+
+- name: Restart nginx service
+  ansible.builtin.service:
+    name: nginx
+    state: restarted
+    enabled: yes

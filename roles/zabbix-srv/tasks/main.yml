@@ -1,0 +1,42 @@
+---
+- name: Do OS specific tasks
+  include_tasks: "{{ ansible_distribution }}.yml"
+
+- name: Unzip initial DB for Zabbix server
+  # ansible.builtin.unarchive - Does not handle .gz files, .bz2 files or .xz files that do not contain a .tar archive.
+  shell: gunzip -c /usr/share/doc/zabbix-server-pgsql/create.sql.gz > /tmp/create.sql
+
+- name: Import initial DB for Zabbix Server
+  community.postgresql.postgresql_db:
+    name: "{{ zbx_db_name }}"
+    login_host: "{{ zbx_db_host }}"
+    login_user: "{{ zbx_db_user }}"
+    login_password: "{{ zbx_db_pass }}"
+    state: restore
+    target: /tmp/create.sql
+
+- name: Add DBHost and DBPassword settings to config of Zabbix server
+  ansible.builtin.lineinfile:
+    path: "{{ item.path }}"
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    insertafter: "{{ item.insertafter }}"
+    state: present
+  loop:
+    - { path: '/etc/zabbix/zabbix_server.conf', regexp: '^DBHost=', line: 'DBHost={{ zbx_db_hostname }}' , insertafter: '^# DBHost=localhost'}
+    - { path: '/etc/zabbix/zabbix_server.conf', regexp: '^DBPassword=', line: 'DBPassword={{ zbx_db_pass }}' , insertafter: '^# DBPassword='}
+
+- name: Allow incoming connections in firewall on Zabbix Server default port
+  ansible.builtin.iptables:
+    chain: INPUT
+    protocol: tcp
+    destination_port: '10051'
+    ctstate: NEW,ESTABLISHED
+    jump: ACCEPT
+    comment: Accept Zabbix Server connections.
+
+- name: Enable and start Zabbix Server
+  ansible.builtin.service:
+    name: zabbix-server
+    state: restarted
+    enabled: yes

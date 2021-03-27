@@ -1,0 +1,27 @@
+---
+- name: Do OS specific tasks
+  include_tasks: "{{ ansible_distribution }}.yml"
+
+- name: Add DNS records for Zabbix DB and Zabbix Server
+  ansible.builtin.lineinfile:
+    path: /etc/hosts
+    regexp: "{{ item.regexp }}"
+    line: "{{ item.line }}"
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+    - { regexp: '^{{ zbx_db_host }}', line: '{{ zbx_db_host }}  {{ zbx_db_hostname }}' }
+    - { regexp: '^{{ zbx_srv_host }}', line: '{{ zbx_srv_host }}  {{ zbx_srv_hostname }}' }
+
+- name: Direct Zabbix Agent to right Server
+  ansible.builtin.lineinfile:
+    path: /etc/zabbix/zabbix_agentd.conf
+    regexp: '^Server=127.0.0.1'
+    line: 'Server={{ zbx_srv_hostname }}'
+
+- name: Restart Zabbix agent
+  ansible.builtin.service:
+    name: zabbix-agent
+    state: restarted
+    enabled: yes

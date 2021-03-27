@@ -1,0 +1,52 @@
+---
+- name: Do OS specific tasks
+  include_tasks: "{{ ansible_distribution }}.yml"
+
+- name: Allow incoming connections in firewall on PostgreSQL default port
+  ansible.builtin.iptables:
+    chain: INPUT
+    protocol: tcp
+    destination: "{{ zbx_db_host }}"
+    destination_port: '5432'
+    ctstate: NEW,ESTABLISHED
+    jump: ACCEPT
+    comment: Accept PostgreSQL connections.
+
+- name: Create database for Zabbix server
+  community.postgresql.postgresql_db:
+    name: "{{ zbx_db_name }}"
+    template: template0
+    encoding: UTF8
+    lc_collate: en_US.UTF-8
+    lc_ctype: en_US.UTF-8
+  become: yes
+  become_user: postgres
+
+- name: Create database for Zabbix Proxy
+  community.postgresql.postgresql_db:
+    name: "{{ zbx_proxy_db_name }}"
+    template: template0
+    encoding: UTF8
+    lc_collate: en_US.UTF-8
+    lc_ctype: en_US.UTF-8
+  become: yes
+  become_user: postgres
+
+- name: Create user for Zabbix server database and grant it ALL
+  community.postgresql.postgresql_user:
+    db: "{{ zbx_db_name }}"
+    name: "{{ zbx_db_user }}"
+    password: "{{ zbx_db_pass }}"
+    priv: ALL
+    state: present
+  become: yes
+  become_user: postgres
+
+- name: GRANT ALL PRIVILEGES ON DATABASE "{{ zbx_proxy_db_name }}" TO "{{ zbx_db_user }}"
+  community.postgresql.postgresql_privs:
+    db: "{{ zbx_proxy_db_name }}"
+    privs: ALL
+    type: database
+    role: "{{ zbx_db_user }}"
+  become: yes
+  become_user: postgres

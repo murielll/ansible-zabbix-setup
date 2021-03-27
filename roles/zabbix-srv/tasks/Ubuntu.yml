@@ -1,0 +1,9 @@
+---
+- name: Install packages for Zabbix server
+  ansible.builtin.apt:
+    name:
+      - zabbix-server-pgsql
+      - postgresql-client
+      - iptables
+    update_cache: yes
+    state: present

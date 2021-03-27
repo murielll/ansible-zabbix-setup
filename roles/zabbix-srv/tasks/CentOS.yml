@@ -1,0 +1,9 @@
+---
+- name: Install packages for Zabbix server
+  ansible.builtin.dnf:
+    name:
+      - zabbix-server-pgsql
+      - postgresql
+      - iptables
+    update_cache: yes
+    state: present

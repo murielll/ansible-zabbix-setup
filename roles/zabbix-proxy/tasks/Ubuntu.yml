@@ -1,0 +1,8 @@
+---
+- name: Install packages for Zabbix Proxy
+  ansible.builtin.apt:
+    name:
+      - zabbix-proxy-pgsql
+      - postgresql-client
+    update_cache: yes
+    state: present

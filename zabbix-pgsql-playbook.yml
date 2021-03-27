@@ -1,0 +1,46 @@
+---
+# This playbook does Zabbix distributed setup on 4 servers.
+- name: Prepare 4 different servers to installing Zabbix Server + Zabbix Proxy + Zabbix Web UI + PostgreSQL DB
+  hosts: zabbix_all
+  gather_facts: yes
+  remote_user: root
+  vars_files:
+    - vars.yml
+  roles:
+    - common
+
+- name: Install PostgreSQL DB
+  hosts: zabbix-db
+  gather_facts: yes
+  remote_user: root
+  vars_files:
+    - vars.yml
+  roles:
+    - zabbix-db
+
+- name: Install Zabbix Server
+  hosts: zabbix-srv
+  gather_facts: yes
+  remote_user: root
+  vars_files:
+    - vars.yml
+  roles:
+    - zabbix-srv
+
+- name: Install Zabbix Web UI
+  hosts: zabbix-web
+  gather_facts: yes
+  remote_user: root
+  vars_files:
+    - vars.yml
+  roles:
+    - zabbix-web
+
+- name: Install Zabbix Proxy
+  hosts: zabbix-proxy
+  gather_facts: yes
+  remote_user: root
+  vars_files:
+    - vars.yml
+  roles:
+    - zabbix-proxy
