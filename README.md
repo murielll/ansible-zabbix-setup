@@ -1,10 +1,14 @@
 # Ansible playbook for distributed Zabbix setup
 
+Supported OS:
+ - Ubuntu 20.04
+ - CentOS 8
 
 
 ## Install Ansible requirements:
 
 ansible-galaxy collection install community.postgresql
+
 ansible-galaxy collection install community.general
 
 
