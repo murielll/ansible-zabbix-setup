@@ -1,8 +1,10 @@
-# Ansible playbook for distributed Zabbix setup
+# Ansible playbook for distributed Zabbix 5.2 setup
 
 Supported OS:
  - Ubuntu 20.04
  - CentOS 8
+
+PostgreSQL version: 13
 
 
 ## Install Ansible requirements:
