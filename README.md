@@ -1,6 +1,6 @@
 # Ansible playbook for distributed Zabbix 5.2 setup
 
-Supported OS:
+Tested OS:
  - Ubuntu 20.04
  - CentOS 8
 
