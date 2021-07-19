@@ -18,7 +18,7 @@ ansible-galaxy collection install community.general
 
 Edit hosts.yml to correspond your needs.
 
-Edit vars.yml to correspond your needs.
+Edit group_vars/all.yml to correspond your needs.
 
 Create vault:
 
