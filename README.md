@@ -13,6 +13,10 @@ ansible-galaxy collection install community.postgresql
 
 ansible-galaxy collection install community.general
 
+OR
+
+ansible-galaxy collection install -r requirements.yml
+
 
 ## Configuration
 
